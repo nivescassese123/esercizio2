@@ -2,33 +2,31 @@
 namespace lasd {
 
 /* ************************************************************************** */
- // Default constructor
-
-
 
 
  // Specific constructors
 template <typename Data>
-HeapVec<Data>::HeapVec(const TraversableContainer<Data>& Tcon) : Vector<Data>(Tcon) {
+HeapVec<Data>::HeapVec(const TraversableContainer<Data>& con) : SortableVector<Data>:: SortableVector(con) {
     
      Heapify();
 }
 
 template <typename Data>
-HeapVec<Data>::HeapVec(const MappableContainer<Data>& Mcon) : Vector<Data>(Mcon) {
+HeapVec<Data>::HeapVec(const MappableContainer<Data>&& con) : SortableVector<Data>:: SortableVector(std::move(con)) {
       Heapify();
 }
 
- // Copy constructor
-template <typename Data>
-HeapVec<Data>::HeapVec(const HeapVec<Data>& heap) : Vector<Data>(heap) {
-    // Non serve chiamare Heapify() perché stiamo copiando da un heap già valido
+//copu constructor
+template<typename Data>
+HeapVec<Data>::HeapVec(const HeapVec<Data>& heap) : SortableVector<Data>(heap) {
+    // La copia viene gestita dal costruttore di Vector
+    // Non serve altro perché stiamo già copiando un heap valido
 }
 
- // Move constructor
-template <typename Data>
-HeapVec<Data>::HeapVec(HeapVec<Data>&& heap) noexcept : Vector<Data>(std::move(heap)) {
-    // Non serve chiamare Heapify() perché stiamo spostando un heap già valido
+//move constructor
+template<typename Data>
+HeapVec<Data>::HeapVec(HeapVec<Data>&& heap) noexcept : SortableVector<Data>(std::move(heap)) {
+    // Lo spostamento viene gestito dal costruttore di Vector
 }
 
  // Copy assignment

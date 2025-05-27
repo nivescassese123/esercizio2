@@ -14,7 +14,7 @@ namespace lasd {
 /* ************************************************************************** */
 
 template <typename Data>
-class PQHeap :   public PQ<Data>,
+class PQHeap :  virtual public PQ<Data>,
                  public HeapVec<Data> {
   // Must extend PQ<Data>,
   // Could extend HeapVec<Data>
@@ -25,11 +25,11 @@ private:
 
 protected:
 
-    using Container::Size;
+    
     using Vector<Data>::elements;
     using Vector<Data>::size;
     using HeapVec<Data>::HeapifyDown;
-    using HeapVec<Data>::HeapifyUp;
+   
     
     
 

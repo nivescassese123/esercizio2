@@ -14,7 +14,7 @@ namespace lasd {
 /* ************************************************************************** */
 
 template <typename Data>
-class HeapVec :  public Heap<Data>,
+class HeapVec :   public Heap<Data>,
                  public SortableVector<Data> {
   // Must extend Heap<Data>,
   // Could extend SortableVector<Data>
@@ -25,8 +25,9 @@ private:
 
 protected:
 
-   using Container::Size;
+   
    using Vector<Data>::elements;
+   
    using Vector<Data>::size;
    using Container::Empty;
 
@@ -41,7 +42,7 @@ public:
 
   // Specific constructors
    explicit HeapVec(const TraversableContainer<Data> &); // A heap obtained from a TraversableContainer
-   explicit HeapVec(const MappableContainer<Data> &); // A heap obtained from a MappableContainer
+   explicit HeapVec(const MappableContainer<Data> &&); // A heap obtained from a MappableContainer
 
   /* ************************************************************************ */
 
@@ -74,9 +75,9 @@ public:
 
   // Specific member functions (inherited from Heap)
 
-  virtual bool IsHeap() const  noexcept override; // Override Heap member
+   bool IsHeap() const  noexcept override; // Override Heap member
 
-  virtual void Heapify() override; // Override Heap member
+   void Heapify() override; // Override Heap member
 
   /* ************************************************************************ */
 
@@ -88,23 +89,21 @@ protected:
 
   // Auxiliary functions, if necessary!
 
-    // Funzioni di utilità per la navigazione dell'heap
-  unsigned long Parent(unsigned long idx) const {
-      if (idx == 0) return 0; // La radice non ha genitore, o questo caso non dovrebbe essere chiamato
-      return (idx - 1) / 2;
+unsigned long Parent(unsigned long index) const noexcept {
+    return (index == 0) ? 0 : (index - 1) / 2;
   }
 
-  unsigned long LeftChild(unsigned long idx) const {
-      return (2 * idx) + 1;
+  unsigned long LeftChild(unsigned long index) const noexcept {
+    return (2 * index) + 1;
   }
 
-  unsigned long RightChild(unsigned long idx) const {
-      return (2 * idx) + 2;
+  unsigned long RightChild(unsigned long index) const noexcept {
+    return (2 * index) + 2;
   }
-  
-  void HeapifyDown(unsigned long index);
-  void HeapifyUp(unsigned long index);
-  
+
+  void HeapifyDown(unsigned long);
+  void HeapifyUp(unsigned long);
+
 
 };
 
