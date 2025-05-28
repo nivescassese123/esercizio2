@@ -109,7 +109,7 @@ public:
   /* ************************************************************************ */
 
   // Specific member functions (inherited from LinearContainer)
-
+    using List<Data>::operator[];
     const Data& operator[](const unsigned long index) const override;   
 
   /* ************************************************************************** */

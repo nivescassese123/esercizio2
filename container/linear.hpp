@@ -107,6 +107,9 @@ public:
   /* ************************************************************************ */
 
   // Specific member functions
+  using LinearContainer<Data>::operator[];
+  using LinearContainer<Data>::Front;
+  using LinearContainer<Data>::Back;
 
   virtual inline Data &operator[](unsigned long) = 0;     
 
