@@ -15,11 +15,20 @@
 #include "../zlasdtest/list/list.hpp"
 #include "../zlasdtest/set/set.hpp"
 
+#include "../zlasdtest/heap/heap.hpp"  //includiamo anche i test del secondo esercizio
+#include "../zlasdtest/pq/pq.hpp"
+
+
 #include "../vector/vector.hpp"  
 #include "../list/list.hpp"      
 #include "../set/set.hpp"        
 #include "../set/vec/setvec.hpp"
 #include "../set/lst/setlst.hpp"
+                                 //includiamo anche i test del secondo esercizio 
+#include "../pq/pq.hpp"
+#include "../pq/heap/pqheap.hpp"
+#include "../heap/heap.hpp"
+#include "../heap/vec/heapvec.hpp"
 
 /* ************************************************************************** */
 
@@ -1082,6 +1091,193 @@ void MyTestSetList() {
    
 
 }
+/* ************************************************************************** */
+// Test aggiuntivi per Exercise 2A (Heap) e 2B (Priority Queue)
+
+void MyTestPQ() {
+    std::cout << "\nBegin of PriorityQueue Test:" << std::endl;
+    
+    // Test: Operazioni su coda vuota - eccezioni
+    lasd::PQHeap<int> emptyPQ;
+    testResults.addTest(emptyPQ.Empty(), "Empty PQ is correctly empty");
+    testResults.addTest(emptyPQ.Size() == 0, "Empty PQ has size 0");
+    
+    // Test: Tip() su coda vuota dovrebbe lanciare eccezione
+    bool exceptionThrown = false;
+    try {
+        emptyPQ.Tip();
+    } catch (const std::length_error&) {
+        exceptionThrown = true;
+    }
+    testResults.addTest(exceptionThrown, "Tip() on empty PQ throws exception");
+
+    // Test: TipNRemove() su coda vuota dovrebbe lanciare eccezione
+    exceptionThrown = false;
+    try {
+        emptyPQ.TipNRemove();
+    } catch (const std::length_error&) {
+        exceptionThrown = true;
+    }
+    testResults.addTest(exceptionThrown, "TipNRemove() on empty PQ throws exception");
+
+    // Test: RemoveTip() su coda vuota dovrebbe lanciare eccezione
+    exceptionThrown = false;
+    try {
+        emptyPQ.RemoveTip();
+    } catch (const std::length_error&) {
+        exceptionThrown = true;
+    }
+    testResults.addTest(exceptionThrown, "RemoveTip() on empty PQ throws exception");
+    
+    // Test: Coda con un solo elemento
+    lasd::PQHeap<int> singlePQ;
+    singlePQ.Insert(42);
+    testResults.addTest(singlePQ.Size() == 1, "Single element PQ has size 1");
+    testResults.addTest(!singlePQ.Empty(), "Single element PQ is not empty");
+    testResults.addTest(singlePQ.Tip() == 42, "Single element PQ tip is correct");
+    
+    int removedValue = singlePQ.TipNRemove();
+    testResults.addTest(removedValue == 42, "TipNRemove returns correct value");
+    testResults.addTest(singlePQ.Empty(), "PQ is empty after removing single element");
+    
+    // Test: Elementi duplicati
+    lasd::PQHeap<int> dupPQ;
+    dupPQ.Insert(5);
+    dupPQ.Insert(5);
+    dupPQ.Insert(5);
+    dupPQ.Insert(3);
+    dupPQ.Insert(7);
+    dupPQ.Insert(7);
+    testResults.addTest(dupPQ.Size() == 6, "PQ with duplicates has correct size");
+    testResults.addTest(dupPQ.Tip() == 7, "PQ with duplicates has correct tip");
+
+    dupPQ.RemoveTip();
+    testResults.addTest(dupPQ.Tip() == 7, "After removing one 7, tip is still 7");
+
+    dupPQ.RemoveTip();
+    testResults.addTest(dupPQ.Tip() == 5, "After removing both 7s, tip is 5");
+    
+    // Test: Clear operation
+    lasd::PQHeap<int> clearPQ;
+    for(int i = 1; i <= 5; i++) {
+        clearPQ.Insert(i);
+    }
+    testResults.addTest(clearPQ.Size() == 5, "PQ has 5 elements before clear");
+    
+    clearPQ.Clear();
+    testResults.addTest(clearPQ.Empty(), "PQ is empty after clear");
+    testResults.addTest(clearPQ.Size() == 0, "PQ size is 0 after clear");
+    
+    // Operazioni dopo clear
+    clearPQ.Insert(10);
+    testResults.addTest(clearPQ.Size() == 1, "Can insert after clear");
+    testResults.addTest(clearPQ.Tip() == 10, "Tip works correctly after clear");
+    
+    // Test: TipNRemove su coda con un solo elemento
+    int tipValue = clearPQ.TipNRemove();
+    testResults.addTest(tipValue == 10, "TipNRemove returns correct value after clear");
+    testResults.addTest(clearPQ.Empty(), "PQ is empty after TipNRemove on single element");
+    
+    // Test: TipNRemove su coda con più elementi
+    lasd::PQHeap<int> multiPQ;
+    for(int i = 1; i <= 5; i++) {
+        multiPQ.Insert(i * 10);
+    }
+    testResults.addTest(multiPQ.Size() == 5, "Multi-element PQ has correct size");
+    testResults.addTest(multiPQ.Tip() == 50, "Multi-element PQ tip is correct");
+    int multiTipValue = multiPQ.TipNRemove();
+    testResults.addTest(multiTipValue == 50, "TipNRemove returns correct value from multi-element PQ");
+    testResults.addTest(multiPQ.Size() == 4, "Multi-element PQ size is correct after TipNRemove");
+    testResults.addTest(multiPQ.Tip() == 40, "Multi-element PQ tip is correct after TipNRemove");
+    
+    // Test: Insert and TipNRemove multiple times - SEZIONE CORRETTA
+    lasd::PQHeap<int> insertRemovePQ;
+    for(int i = 1; i <= 10; i++) {
+        insertRemovePQ.Insert(i);
+        testResults.addTest(insertRemovePQ.Tip() == i, "Tip after insert is correct");
+        int removed = insertRemovePQ.TipNRemove();
+        testResults.addTest(removed == i, "TipNRemove returns correct value after insert");
+    }
+    testResults.addTest(insertRemovePQ.Empty(), "PQ is empty after multiple TipNRemove operations");
+    testResults.addTest(insertRemovePQ.Size() == 0, "PQ size is 0 after multiple TipNRemove operations");
+    
+    // Test: Robustness with mixed operations
+    lasd::PQHeap<int> robustPQ;
+    for(int i = 0; i < 100; i++) {
+        if(i % 2 == 0) {
+            robustPQ.Insert(i);
+        } else {
+            if(!robustPQ.Empty()) {
+                robustPQ.TipNRemove();
+            }
+        }
+    }
+    testResults.addTest(robustPQ.Size() <= 50, "Robustness test maintains correct size");
+    testResults.addTest(robustPQ.Empty() || robustPQ.Tip() <= 98, "Robustness test maintains correct tip value");
+    
+    // Test: Default constructor
+    lasd::PQHeap<int> defaultPQ;
+    testResults.addTest(defaultPQ.Empty(), "Default constructed PQ is empty");
+    testResults.addTest(defaultPQ.Size() == 0, "Default constructed PQ has size 0");
+    
+    // Test: Copy constructor
+    lasd::PQHeap<int> copySource;
+    for(int i = 1; i <= 5; i++) {
+        copySource.Insert(i * 10);
+    }
+    testResults.addTest(copySource.Size() == 5, "Copy source PQ has correct size before copy");
+    lasd::PQHeap<int> copyDest(copySource);
+    testResults.addTest(copySource.Size() == 5, "Copy source PQ size remains unchanged after copy");
+    testResults.addTest(copyDest.Size() == 5, "Copy destination PQ has correct size after copy");
+    testResults.addTest(copyDest.Tip() == 50, "Copy destination PQ tip is correct after copy");
+    
+    // Test: Copy assignment operator
+    lasd::PQHeap<int> copyAssignSource;
+    for(int i = 1; i <= 5; i++) {
+        copyAssignSource.Insert(i * 20);
+    }
+    testResults.addTest(copyAssignSource.Size() == 5, "Copy assignment source PQ has correct size before copy assignment");
+    lasd::PQHeap<int> copyAssignDest;
+    copyAssignDest = copyAssignSource;
+    testResults.addTest(copyAssignSource.Size() == 5, "Copy assignment source PQ size remains unchanged after assignment");
+    testResults.addTest(copyAssignDest.Size() == 5, "Copy assignment destination PQ has correct size after assignment");
+    testResults.addTest(copyAssignDest.Tip() == 100, "Copy assignment destination PQ tip is correct after assignment");
+    
+    // Test: Move constructor
+    lasd::PQHeap<int> moveSource;
+    for(int i = 1; i <= 5; i++) {
+        moveSource.Insert(i * 10);
+    }
+    testResults.addTest(moveSource.Size() == 5, "Move source PQ has correct size before move");
+    lasd::PQHeap<int> moveDest(std::move(moveSource));
+    testResults.addTest(moveSource.Empty(), "Move source PQ is empty after move");
+    testResults.addTest(moveDest.Size() == 5, "Move destination PQ has correct size after move");
+    testResults.addTest(moveDest.Tip() == 50, "Move destination PQ tip is correct after move");
+    
+    // Test: Move assignment operator
+    lasd::PQHeap<int> moveAssignSource;
+    for(int i = 1; i <= 5; i++) {
+        moveAssignSource.Insert(i * 20);
+    }
+    testResults.addTest(moveAssignSource.Size() == 5, "Move assignment source PQ has correct size before move assignment");
+    lasd::PQHeap<int> moveAssignDest;
+    moveAssignDest = std::move(moveAssignSource);
+    testResults.addTest(moveAssignSource.Empty(), "Move assignment source PQ is empty after move assignment");
+    testResults.addTest(moveAssignDest.Size() == 5, "Move assignment destination PQ has correct size after move assignment");
+    testResults.addTest(moveAssignDest.Tip() == 100, "Move assignment destination PQ tip is correct after move assignment");
+
+    testResults.printSummary("PriorityQueue Edge Cases");
+    std::cout << "\nEnd of PriorityQueue Edge Cases Test." << std::endl;
+}
+
+
+/* ************************************************************************** */
+
+void MyTestHeap() {
+     std::cout << "\n non ci sono ancora i test per la Heap" << std::endl;
+
+
+}
 
 
 
@@ -1092,37 +1288,80 @@ void MyTestSetList() {
 void mytest() {
     int scelta;
     
-    std::cout << "~*~#~*~ Benvenuti in: LASD Test Suite Custom~*~#~*~!" << std::endl;
+    std::cout << "~*~#~*~ Benvenuti nei Test Personalizzati ~*~#~*~!" << std::endl;
     
     do {
         std::cout << "\nScegli il test da eseguire:" << std::endl;
+        std::cout << "\n=== ESERCIZIO 1: Vector/List/Set ===" << std::endl;
         std::cout << "1. Test Vector" << std::endl;
         std::cout << "2. Test List" << std::endl;
         std::cout << "3. Test Set" << std::endl;
-        std::cout << "4. Esegui tutti i test" << std::endl;
-        std::cout << "0. Esci" << std::endl;
-        std::cout << "Scelta: ";
+        std::cout << "4. Esegui tutti i test dell'Esercizio 1" << std::endl;
+        std::cout << "\n=== ESERCIZIO 2:  ===" << std::endl;
+        std::cout << "5. Test da aggiungere  (Vector Implementation)" << std::endl;
+        std::cout << "6. Test Priority Queue" << std::endl;
+        std::cout << "7. Esegui tutti i test dell'Esercizio 2" << std::endl;
+        std::cout << "\n=== OPZIONI GENERALI ===" << std::endl;
+        std::cout << "8. Esegui tutti i test (Esercizio 1 & 2)" << std::endl;
+        std::cout << "0. Torna al menu principale" << std::endl;
+        std::cout << "\nScelta: ";
         std::cin >> scelta;
         
         switch(scelta) {
+            // Test Esercizio 1
             case 1:
+                std::cout << "\n=== TEST VECTOR (ESERCIZIO 1) ===" << std::endl;
                 MyTestVector();
                 break;
             case 2:
+                std::cout << "\n=== TEST LIST (ESERCIZIO 1) ===" << std::endl;
                 MyTestList();
                 break;
             case 3:
+                std::cout << "\n=== TEST SET (ESERCIZIO 1) ===" << std::endl;
                 MyTestSetVec();
                 MyTestSetList();
                 break;
             case 4:
-                std::cout << "\n========= ESECUZIONE DI TUTTI I TEST =========" << std::endl;
+                std::cout << "\n=== TEST COMPLETI ESERCIZIO 1 ===" << std::endl;
                 MyTestVector();
                 MyTestList();
-                MyTestList();
+                MyTestSetVec();
+                MyTestSetList();
                 break;
+                
+            // Test Esercizio 2
+            case 5:
+                std::cout << "\n=== TEST DI HEAP (ESERCIZIO 2) ===" << std::endl;
+                //funzione non ancora implementata
+                std::cout << "Test per Heap" << std::endl;
+                break;
+            case 6:
+                std::cout << "\n=== TEST DI PRIORITY QUEUE (ESERCIZIO 2) ===" << std::endl;
+                MyTestPQ();
+                std::cout << "Test per Priority Queue" << std::endl;
+                break;
+            case 7:
+                std::cout << "\n=== TEST COMPLETI ESERCIZIO 2 ===" << std::endl;
+                // MyTestHeapIntegration();
+                //  MyTestPQIntegration();
+                std::cout << "Test non ancora implementati" << std::endl;
+                break;
+                
+            // Test Completi
+            case 8:
+                std::cout << "\n=== ESECUZIONE DI TUTTI I TEST ===" << std::endl;
+                std::cout << "\n--- TEST ESERCIZIO 1 ---" << std::endl;
+                MyTestVector();
+                MyTestList();
+                MyTestSetVec();
+                MyTestSetList();
+                std::cout << "\n--- TEST ESERCIZIO 2 ---" << std::endl;
+                std::cout << "Test non ancora implementati" << std::endl;
+                break;
+                
             case 0:
-                std::cout << "Uscita dai test personalizzati" << std::endl;
+                std::cout << "Ritorno al menu principale..." << std::endl;
                 break;
             default:
                 std::cout << "Scelta non valida" << std::endl;
