@@ -2,6 +2,9 @@
 #include <iostream>
 #include <cassert>
 #include <iomanip>
+#include <cfloat>
+#include <random>
+
 
 /* ************************************************************************** */
 
@@ -71,6 +74,7 @@ struct TestResults {
 TestResults testResults;
 
 /* ************************************************************************** */
+/* TEST ESERCIZIO 1 COMMENTATI
 
 // Test personalizzati per Vector che utilizzano le funzioni del professore
 void MyTestVector() {
@@ -541,7 +545,6 @@ void MyTestVector() {
     testResults.printSummary("Vector<int>");
 }
 
-/* ************************************************************************** */
 
 // Test personalizzati per List
 void MyTestList() {
@@ -735,7 +738,6 @@ void MyTestList() {
     testResults.printSummary("List<int>");
 }
 
-/* ************************************************************************** */
 
 void MyTestSetVec() {
     std::cout << "\nBegin of SetVec<int> Test:" << std::endl;
@@ -1091,195 +1093,1042 @@ void MyTestSetList() {
    
 
 }
+ */
 /* ************************************************************************** */
 // Test aggiuntivi per Exercise 2A (Heap) e 2B (Priority Queue)
 
 void MyTestPQ() {
-    std::cout << "\nBegin of PriorityQueue Test:" << std::endl;
+    std::cout << "\nBegin of Priority Queue Tests:" << std::endl;
+    // Resettiamo il contatore dei test
+    testResults.reset();
+    // Test: costruttore con vector vuoto
+    lasd::Vector<int> emptyVec(0);
+    lasd::PQHeap<int> pqEmpty(emptyVec);
+    testResults.addTest(pqEmpty.Empty(), "Priority Queue created with empty vector is empty");  
+    testResults.addTest(pqEmpty.Size() == 0, "Priority Queue created with empty vector has size 0");
+    // Test: costruttore con vector con un elemento
+    lasd::Vector<int> singleVec(1);
+    singleVec[0] = 42;
+    lasd::PQHeap<int> pqSingle(singleVec);
+    testResults.addTest(pqSingle.Size() == 1, "Priority Queue with single element has size 1");
+    testResults.addTest(pqSingle.Empty() == false, "Priority Queue with single element is not empty");
+    testResults.addTest(pqSingle.Tip() == 42, "Priority Queue with single element has correct top value");
+    // Test: operazioni su PQ vuota
+    lasd::PQHeap<int> pqEmpty2;
+    bool tipThrows = false, removeThrows = false, tipNRemoveThrows = false;
     
-    // Test: Operazioni su coda vuota - eccezioni
-    lasd::PQHeap<int> emptyPQ;
-    testResults.addTest(emptyPQ.Empty(), "Empty PQ is correctly empty");
-    testResults.addTest(emptyPQ.Size() == 0, "Empty PQ has size 0");
-    
-    // Test: Tip() su coda vuota dovrebbe lanciare eccezione
-    bool exceptionThrown = false;
-    try {
-        emptyPQ.Tip();
-    } catch (const std::length_error&) {
-        exceptionThrown = true;
+    try { pqEmpty2.Tip(); } catch(...) { tipThrows = true; }
+    try { pqEmpty2.RemoveTip(); } catch(...) { removeThrows = true; }
+    try { pqEmpty2.TipNRemove(); } catch(...) { tipNRemoveThrows = true; }
+    testResults.addTest(tipThrows, "Tip on empty PQ throws exception");
+    testResults.addTest(removeThrows, "RemoveTip on empty PQ throws exception");
+    testResults.addTest(tipNRemoveThrows, "TipNRemove on empty PQ throws exception");
+        // Test: Move constructor
+    lasd::PQHeap<int> srcPQ;
+    for(int i = 0; i < 5; i++) {
+        srcPQ.Insert(i);
     }
-    testResults.addTest(exceptionThrown, "Tip() on empty PQ throws exception");
-
-    // Test: TipNRemove() su coda vuota dovrebbe lanciare eccezione
-    exceptionThrown = false;
-    try {
-        emptyPQ.TipNRemove();
-    } catch (const std::length_error&) {
-        exceptionThrown = true;
-    }
-    testResults.addTest(exceptionThrown, "TipNRemove() on empty PQ throws exception");
-
-    // Test: RemoveTip() su coda vuota dovrebbe lanciare eccezione
-    exceptionThrown = false;
-    try {
-        emptyPQ.RemoveTip();
-    } catch (const std::length_error&) {
-        exceptionThrown = true;
-    }
-    testResults.addTest(exceptionThrown, "RemoveTip() on empty PQ throws exception");
+    int originalSize = srcPQ.Size();
+    int originalTop = srcPQ.Tip();
     
-    // Test: Coda con un solo elemento
-    lasd::PQHeap<int> singlePQ;
-    singlePQ.Insert(42);
-    testResults.addTest(singlePQ.Size() == 1, "Single element PQ has size 1");
-    testResults.addTest(!singlePQ.Empty(), "Single element PQ is not empty");
-    testResults.addTest(singlePQ.Tip() == 42, "Single element PQ tip is correct");
-    
-    int removedValue = singlePQ.TipNRemove();
-    testResults.addTest(removedValue == 42, "TipNRemove returns correct value");
-    testResults.addTest(singlePQ.Empty(), "PQ is empty after removing single element");
-    
-    // Test: Elementi duplicati
-    lasd::PQHeap<int> dupPQ;
-    dupPQ.Insert(5);
-    dupPQ.Insert(5);
-    dupPQ.Insert(5);
-    dupPQ.Insert(3);
-    dupPQ.Insert(7);
-    dupPQ.Insert(7);
-    testResults.addTest(dupPQ.Size() == 6, "PQ with duplicates has correct size");
-    testResults.addTest(dupPQ.Tip() == 7, "PQ with duplicates has correct tip");
-
-    dupPQ.RemoveTip();
-    testResults.addTest(dupPQ.Tip() == 7, "After removing one 7, tip is still 7");
-
-    dupPQ.RemoveTip();
-    testResults.addTest(dupPQ.Tip() == 5, "After removing both 7s, tip is 5");
-    
-    // Test: Clear operation
-    lasd::PQHeap<int> clearPQ;
-    for(int i = 1; i <= 5; i++) {
-        clearPQ.Insert(i);
-    }
-    testResults.addTest(clearPQ.Size() == 5, "PQ has 5 elements before clear");
-    
-    clearPQ.Clear();
-    testResults.addTest(clearPQ.Empty(), "PQ is empty after clear");
-    testResults.addTest(clearPQ.Size() == 0, "PQ size is 0 after clear");
-    
-    // Operazioni dopo clear
-    clearPQ.Insert(10);
-    testResults.addTest(clearPQ.Size() == 1, "Can insert after clear");
-    testResults.addTest(clearPQ.Tip() == 10, "Tip works correctly after clear");
-    
-    // Test: TipNRemove su coda con un solo elemento
-    int tipValue = clearPQ.TipNRemove();
-    testResults.addTest(tipValue == 10, "TipNRemove returns correct value after clear");
-    testResults.addTest(clearPQ.Empty(), "PQ is empty after TipNRemove on single element");
-    
-    // Test: TipNRemove su coda con più elementi
-    lasd::PQHeap<int> multiPQ;
-    for(int i = 1; i <= 5; i++) {
-        multiPQ.Insert(i * 10);
-    }
-    testResults.addTest(multiPQ.Size() == 5, "Multi-element PQ has correct size");
-    testResults.addTest(multiPQ.Tip() == 50, "Multi-element PQ tip is correct");
-    int multiTipValue = multiPQ.TipNRemove();
-    testResults.addTest(multiTipValue == 50, "TipNRemove returns correct value from multi-element PQ");
-    testResults.addTest(multiPQ.Size() == 4, "Multi-element PQ size is correct after TipNRemove");
-    testResults.addTest(multiPQ.Tip() == 40, "Multi-element PQ tip is correct after TipNRemove");
-    
-    // Test: Insert and TipNRemove multiple times - SEZIONE CORRETTA
-    lasd::PQHeap<int> insertRemovePQ;
-    for(int i = 1; i <= 10; i++) {
-        insertRemovePQ.Insert(i);
-        testResults.addTest(insertRemovePQ.Tip() == i, "Tip after insert is correct");
-        int removed = insertRemovePQ.TipNRemove();
-        testResults.addTest(removed == i, "TipNRemove returns correct value after insert");
-    }
-    testResults.addTest(insertRemovePQ.Empty(), "PQ is empty after multiple TipNRemove operations");
-    testResults.addTest(insertRemovePQ.Size() == 0, "PQ size is 0 after multiple TipNRemove operations");
-    
-    // Test: Robustness with mixed operations
-    lasd::PQHeap<int> robustPQ;
-    for(int i = 0; i < 100; i++) {
-        if(i % 2 == 0) {
-            robustPQ.Insert(i);
-        } else {
-            if(!robustPQ.Empty()) {
-                robustPQ.TipNRemove();
-            }
-        }
-    }
-    testResults.addTest(robustPQ.Size() <= 50, "Robustness test maintains correct size");
-    testResults.addTest(robustPQ.Empty() || robustPQ.Tip() <= 98, "Robustness test maintains correct tip value");
-    
-    // Test: Default constructor
-    lasd::PQHeap<int> defaultPQ;
-    testResults.addTest(defaultPQ.Empty(), "Default constructed PQ is empty");
-    testResults.addTest(defaultPQ.Size() == 0, "Default constructed PQ has size 0");
-    
-    // Test: Copy constructor
-    lasd::PQHeap<int> copySource;
-    for(int i = 1; i <= 5; i++) {
-        copySource.Insert(i * 10);
-    }
-    testResults.addTest(copySource.Size() == 5, "Copy source PQ has correct size before copy");
-    lasd::PQHeap<int> copyDest(copySource);
-    testResults.addTest(copySource.Size() == 5, "Copy source PQ size remains unchanged after copy");
-    testResults.addTest(copyDest.Size() == 5, "Copy destination PQ has correct size after copy");
-    testResults.addTest(copyDest.Tip() == 50, "Copy destination PQ tip is correct after copy");
-    
-    // Test: Copy assignment operator
-    lasd::PQHeap<int> copyAssignSource;
-    for(int i = 1; i <= 5; i++) {
-        copyAssignSource.Insert(i * 20);
-    }
-    testResults.addTest(copyAssignSource.Size() == 5, "Copy assignment source PQ has correct size before copy assignment");
-    lasd::PQHeap<int> copyAssignDest;
-    copyAssignDest = copyAssignSource;
-    testResults.addTest(copyAssignSource.Size() == 5, "Copy assignment source PQ size remains unchanged after assignment");
-    testResults.addTest(copyAssignDest.Size() == 5, "Copy assignment destination PQ has correct size after assignment");
-    testResults.addTest(copyAssignDest.Tip() == 100, "Copy assignment destination PQ tip is correct after assignment");
-    
-    // Test: Move constructor
-    lasd::PQHeap<int> moveSource;
-    for(int i = 1; i <= 5; i++) {
-        moveSource.Insert(i * 10);
-    }
-    testResults.addTest(moveSource.Size() == 5, "Move source PQ has correct size before move");
-    lasd::PQHeap<int> moveDest(std::move(moveSource));
-    testResults.addTest(moveSource.Empty(), "Move source PQ is empty after move");
-    testResults.addTest(moveDest.Size() == 5, "Move destination PQ has correct size after move");
-    testResults.addTest(moveDest.Tip() == 50, "Move destination PQ tip is correct after move");
+    // Test move constructor
+    lasd::PQHeap<int> movedPQ(std::move(srcPQ));
+    testResults.addTest(movedPQ.Size() == static_cast<unsigned long>(originalSize), 
+                   "Move constructor preserves size");
+    testResults.addTest(movedPQ.Tip() == originalTop, "Move constructor preserves top element");
+    testResults.addTest(srcPQ.Empty(), "Source PQ is empty after move constructor");
     
     // Test: Move assignment operator
-    lasd::PQHeap<int> moveAssignSource;
-    for(int i = 1; i <= 5; i++) {
-        moveAssignSource.Insert(i * 20);
+    lasd::PQHeap<int> srcPQ2;
+    for(int i = 0; i < 3; i++) {
+        srcPQ2.Insert(i * 10);
     }
-    testResults.addTest(moveAssignSource.Size() == 5, "Move assignment source PQ has correct size before move assignment");
-    lasd::PQHeap<int> moveAssignDest;
-    moveAssignDest = std::move(moveAssignSource);
-    testResults.addTest(moveAssignSource.Empty(), "Move assignment source PQ is empty after move assignment");
-    testResults.addTest(moveAssignDest.Size() == 5, "Move assignment destination PQ has correct size after move assignment");
-    testResults.addTest(moveAssignDest.Tip() == 100, "Move assignment destination PQ tip is correct after move assignment");
+    originalSize = srcPQ2.Size();
+    originalTop = srcPQ2.Tip();
+    
+    lasd::PQHeap<int> assignedPQ;
+    assignedPQ = std::move(srcPQ2);
+    testResults.addTest(assignedPQ.Size() == static_cast<unsigned long>(originalSize), 
+                   "Move assignment preserves size");
+    testResults.addTest(assignedPQ.Tip() == originalTop, "Move assignment preserves top element");
+    testResults.addTest(srcPQ2.Empty(), "Source PQ is empty after move assignment");
+    
+    // Test: Chain of move operations
+    lasd::PQHeap<int> pq1, pq2, pq3;
+    pq1.Insert(42);
+    pq2 = std::move(pq1);
+    pq3 = std::move(pq2);
+    testResults.addTest(pq3.Tip() == 42, "Chain of move operations preserves value");
+    testResults.addTest(pq1.Empty() && pq2.Empty(), "Chain of moves leaves intermediate PQs empty");
+    
+    // Test: Move operations with strings
+    lasd::PQHeap<std::string> strPQ;
+    strPQ.Insert("test");
+    strPQ.Insert("move");
+    lasd::PQHeap<std::string> movedStrPQ(std::move(strPQ));
+    testResults.addTest(movedStrPQ.Tip() == "test", "Move constructor works with strings");
+    testResults.addTest(strPQ.Empty(), "Source string PQ is empty after move");
+        // Multi-element PQ tests
+    lasd::Vector<int> multiVec(5);
+    multiVec[0] = 10; multiVec[1] = 30; multiVec[2] = 20; multiVec[3] = 50; multiVec[4] = 40;
+    lasd::PQHeap<int> pqMulti(multiVec);
+    testResults.addTest(pqMulti.Size() == 5, "Multi-element PQ has correct size");
+    testResults.addTest(pqMulti.Tip() == 50, "Multi-element PQ has correct max value at tip");
 
-    testResults.printSummary("PriorityQueue Edge Cases");
-    std::cout << "\nEnd of PriorityQueue Edge Cases Test." << std::endl;
-}
+    // Test sequence of operations
+    int tip1 = pqMulti.TipNRemove();
+    int tip2 = pqMulti.TipNRemove();
+    testResults.addTest(tip1 == 50 && tip2 == 40, "TipNRemove returns elements in correct order");
+    testResults.addTest(pqMulti.Size() == 3, "Size updates correctly after removals");
+
+    // Copy constructor test
+    lasd::PQHeap<int> pqCopy = pqMulti;
+    testResults.addTest(pqCopy.Size() == pqMulti.Size(), "Copy constructor preserves size");
+    testResults.addTest(pqCopy.Tip() == pqMulti.Tip(), "Copy constructor preserves tip value");
+
+    // Test with string type
+    lasd::Vector<std::string> strVec(3);
+    strVec[0] = "banana"; strVec[1] = "apple"; strVec[2] = "cherry";
+    lasd::PQHeap<std::string> pqString(strVec);
+    testResults.addTest(pqString.Tip() == "cherry", "String PQ maintains correct order");
+
+    // Test with double type and precision
+    lasd::Vector<double> doubleVec(4);
+    doubleVec[0] = 3.14; doubleVec[1] = 2.718; doubleVec[2] = 1.414; doubleVec[3] = 1.732;
+    lasd::PQHeap<double> pqDouble(doubleVec);
+    testResults.addTest(std::abs(pqDouble.Tip() - 3.14) < 0.0001, "Double PQ maintains precision");
+
+    // Test with extreme values
+    lasd::Vector<int> extremeVec(3);
+    extremeVec[0] = INT_MAX; extremeVec[1] = 0; extremeVec[2] = INT_MIN;
+    lasd::PQHeap<int> pqExtreme(extremeVec);
+    testResults.addTest(pqExtreme.Tip() == INT_MAX, "PQ handles extreme values correctly");
+
+    // Test insertion order independence
+    lasd::Vector<int> vec1(3), vec2(3);
+    vec1[0] = 1; vec1[1] = 2; vec1[2] = 3;
+    vec2[0] = 3; vec2[1] = 1; vec2[2] = 2;
+    lasd::PQHeap<int> pqTest1(vec1), pqTest2(vec2);
+    testResults.addTest(pqTest1.Tip() == pqTest2.Tip(), 
+                   "PQ maintains heap property regardless of insertion order");
+
+    // Test empty after removing all elements
+    while (!pqTest1.Empty()) {
+    pqTest1.RemoveTip();
+    }
+    testResults.addTest(pqTest1.Empty(), "PQ is empty after removing all elements");
+    testResults.addTest(pqTest1.Size() == 0, "PQ size is 0 after removing all elements");
+    // Test con operazioni Push/Pop alternate
+    lasd::PQHeap<int> pqAlternate;
+    for(int i = 0; i < 100; i++) {
+        pqAlternate.Insert(i);
+        if(i % 2 == 0) {
+            pqAlternate.RemoveTip();
+        }
+    }
+    testResults.addTest(pqAlternate.Size() == 50, "Alternate Insert/RemoveTip operations");
+    
+    // Test con valori decimali e precisione
+    lasd::PQHeap<double> pqPrecision;
+    pqPrecision.Insert(3.14159);
+    pqPrecision.Insert(3.14158);
+    pqPrecision.Insert(3.14160);
+    testResults.addTest(std::abs(pqPrecision.Tip() - 3.14160) < 0.00001, "High precision floating point comparison");
+    
+    // Test con stringhe di lunghezze diverse
+    lasd::PQHeap<std::string> pqVarStrings;
+    pqVarStrings.Insert("a");
+    pqVarStrings.Insert("aaa");
+    pqVarStrings.Insert("aa");
+    testResults.addTest(pqVarStrings.Tip() == "aaa", "Variable length string comparison");
+    
+    // Test di stabilità con elementi uguali
+    lasd::PQHeap<std::pair<int, int>> pqStability;
+    pqStability.Insert({5, 1});
+    pqStability.Insert({5, 2});
+    pqStability.Insert({5, 3});
+    testResults.addTest(pqStability.Tip().first == 5, "Equal elements handling");
+    
+    // Test con elementi negativi e positivi alternati
+    lasd::PQHeap<int> pqMixed;
+    pqMixed.Insert(1);
+    pqMixed.Insert(-1);
+    pqMixed.Insert(2);
+    pqMixed.Insert(-2);
+    testResults.addTest(pqMixed.Tip() == 2, "Mixed positive/negative values");
+    ///////////////////////////////////////// 
+    // Test di stabilità con elementi uguali
+    lasd::PQHeap<std::pair<int, int>> pqUqualityStability;
+    pqUqualityStability.Insert({5, 1});
+    pqUqualityStability.Insert({5, 2});
+    pqUqualityStability.Insert({5, 3});
+    testResults.addTest(pqUqualityStability.Tip().first == 5, "Equal elements handling");   
+    pqUqualityStability.RemoveTip();
+    testResults.addTest(pqUqualityStability.Tip().first == 5, "Equal elements handling after removal");
+
+    
+    // Test di performance con molte copie
+    lasd::PQHeap<int> originalPerf;
+    for(int i = 0; i < 200; i++) {
+        originalPerf.Insert(i);
+    }
+    
+    std::vector<lasd::PQHeap<int>> copies;
+    for(int i = 0; i < 10; i++) {
+        copies.push_back(originalPerf);
+    }
+    
+    bool allCopiesValid = true;
+    for(const auto& copy : copies) {
+        if(copy.Tip() != 199 || copy.Size() != 200) {
+            allCopiesValid = false;
+            break;
+        }
+    }
+    testResults.addTest(allCopiesValid, "Multiple copies consistency");
+    // Test con stringhe con spazi
+    lasd::PQHeap<std::string> spacePQ;
+    spacePQ.Insert("apple");
+    spacePQ.Insert("banana");
+    spacePQ.Insert("   leading spaces");
+    spacePQ.Insert("trailing spaces   ");
+    spacePQ.Insert("  middle  spaces  ");
+    spacePQ.Insert("nospaces");
+    // La stringa con più spazi all'inizio dovrebbe essere la più grande lessicograficamente
+    testResults.addTest(spacePQ.Tip() == "trailing spaces   ", "Space character handling in strings");
+ 
+    // Test con stringhe identiche
+    lasd::PQHeap<std::string> identicalPQ;
+    identicalPQ.Insert("same");
+    identicalPQ.Insert("same");
+    identicalPQ.Insert("same");
+    testResults.addTest(identicalPQ.Size() == 3, "Identical strings all stored");
+    testResults.addTest(identicalPQ.Tip() == "same", "Identical strings tip");
+     // Test con zero positivo e negativo
+    lasd::PQHeap<double> zeroPQ;
+    zeroPQ.Insert(0.0);
+    zeroPQ.Insert(-0.0);
+    zeroPQ.Insert(0.1);
+    testResults.addTest(zeroPQ.Tip() == 0.1, "Positive zero handling");
+    
+    // Test con numeri molto piccoli
+    lasd::PQHeap<double> precisionPQ;
+    precisionPQ.Insert(0.000001);
+    precisionPQ.Insert(0.000002);
+    precisionPQ.Insert(0.0000005);
+    testResults.addTest(precisionPQ.Tip() == 0.000002, "Small number precision");
+    
+    // Test di svuotamento e riempimento
+    lasd::PQHeap<int> pqCycle;
+    for(int i = 0; i < 10; i++) {
+        pqCycle.Insert(i);
+    }
+    while(!pqCycle.Empty()) {
+        pqCycle.RemoveTip();
+    }
+    testResults.addTest(pqCycle.Empty(), "Empty after multiple removals");
+    for(int i = 0; i < 5; i++) {
+        pqCycle.Insert(i);
+    }
+    testResults.addTest(pqCycle.Size() == 5, "Refill after emptying");
+    
+    
+    // Test con operazioni di copia dopo modifiche
+    lasd::PQHeap<int> pqOriginal;
+    pqOriginal.Insert(100);
+    pqOriginal.Insert(200);
+    lasd::PQHeap<int> pqCopied = pqOriginal;
+    pqOriginal.RemoveTip();
+    testResults.addTest(pqCopied.Tip() == 200, "Deep copy independence");
+    
+    // Test di stress con molte operazioni
+    lasd::PQHeap<int> pqStress;
+    for(int i = 0; i < 1000; i++) {
+        pqStress.Insert(rand() % 1000);
+        if(i % 3 == 0 && !pqStress.Empty()) {
+            pqStress.RemoveTip();
+        }
+    }
+    testResults.addTest(pqStress.Size() > 0, "Stress test survival");
+
+    //PROVIAMO AD AGGIUNGERNE ALTRI
+    std::cout <<"\n Inizio test aggiuntivi"<< std::endl;
+    //Test con change
+    lasd::PQHeap<int> changePQ;
+    changePQ.Insert(50);
+    changePQ.Insert(30);
+    changePQ.Insert(70);
+    changePQ.Insert(10);
+    changePQ.Insert(60);
+    testResults.addTest(changePQ.Tip() == 70, "Initial tip is correct before change");
+    changePQ.Change(0, 5); // l'elemento con indice 0 è il max
+    testResults.addTest(changePQ.Tip() == 60, "Change max to small value: new tip is next max");
+    changePQ.Clear(); // puliamo la coda
+    changePQ.Insert(50);
+    changePQ.Insert(40);
+    testResults.addTest(changePQ.Tip() == 50, "Tip before Change to same value");
+    changePQ.Change(0, 50); // cambiamo il max con lo stesso valore
+    testResults.addTest(changePQ.Tip() == 50, "Tip after Change to same value remains unchanged");
+
+    // Test con Exists
+    lasd::PQHeap<int> existsPQ;
+    existsPQ.Insert(10);
+    existsPQ.Insert(20);
+    existsPQ.Insert(30);
+    testResults.addTest(existsPQ.Exists(20), "Exists returns true for existing element");
+    testResults.addTest(!existsPQ.Exists(40), "Exists returns false for non-existing element");
+    existsPQ.RemoveTip(); // rimuoviamo il max
+    testResults.addTest(!existsPQ.Exists(30), "Exists returns false for removed element");
+    testResults.addTest(existsPQ.Exists(10), "Exists returns true for still existing element");
+    existsPQ.Insert(20); // aggiungiamo un duplicato
+    testResults.addTest(existsPQ.Exists(20), "Exists returns true for re-inserted element");
+
+    // test di svuotamento e riempimento
+    lasd::PQHeap<int> aggressivePQ;
+    for(int k=0; k<5; ++k) {
+        for(int i=0; i<50; ++i) {
+            aggressivePQ.Insert(i);
+        }
+        testResults.addTest(aggressivePQ.Size() == 50, "Aggressive cycle: size afert insert");
+        aggressivePQ.Clear(); // svuotiamo la coda
+        testResults.addTest(aggressivePQ.Empty(), "Aggressive cycle: PQ is empty after Clear");
+    }
+    testResults.addTest(aggressivePQ.Empty(), "Aggressive cycle: size after Empty is 0");
+
+    //Test di copy assignment su pq con elementi
+    lasd::PQHeap<int> pqAssignsrc;
+    pqAssignsrc.Insert(1);
+    pqAssignsrc.Insert(2);
+    pqAssignsrc.Insert(3);
+    lasd::PQHeap<int> pqAssignDest;
+    pqAssignDest.Insert(10);
+    pqAssignDest.Insert(20);
+    pqAssignDest = pqAssignsrc; // operazione di assegnamento
+    testResults.addTest(pqAssignDest.Size() == pqAssignsrc.Size(), "Assignment operator preserves size");
+    
+    //Test  di move assignment su pq con elementi
+    lasd::PQHeap<int> pqMoveAssignSource;
+    pqMoveAssignSource.Insert(100); pqMoveAssignSource.Insert(200); pqMoveAssignSource.Insert(300);
+    lasd::PQHeap<int> pqMoveAssignDest;
+    pqMoveAssignDest.Insert(10); pqMoveAssignDest.Insert(20);
+    pqMoveAssignDest = std::move(pqMoveAssignSource); // Assegnazione per spostamento
+    
+    testResults.addTest(pqMoveAssignDest.Size() == 3, "Move assignment: dest size is source size");
+    testResults.addTest(pqMoveAssignDest.Tip() == 300, "Move assignment: dest has source's top");
+
+    // Test per capire se sono in segmentation fault o mem leak
+
+    std::random_device rd;       //genera numeri casuali
+    std::mt19937 gen(rd());     //partendo dal generatore rd, mi genera sempre numeri diversi
+    std::uniform_int_distribution<> distrib(0, 10000);     //li conforma
+     {
+        lasd::PQHeap<int> pqEmptyDestructor;
+        // Non facciamo nulla, l'oggetto verrà distrutto uscendo dal blocco
+        testResults.addTest(true, "Destructor on empty PQHeap<int> (no crash)");
+    }
+    {
+        lasd::PQHeap<std::string> pqEmptyStrDestructor;
+        testResults.addTest(true, "Destructor on empty PQHeap<string> (no crash)");
+    }
+    
+
+    // Test per capire se il distruttore dealloca correttamente un heap abbastanza grande da farmi crashare
+    { 
+        lasd::PQHeap<int> pqLargeDestructor;
+        for (int i = 0; i < 10000; ++i) { // Molti elementi
+            pqLargeDestructor.Insert(distrib(gen));
+        }
+        testResults.addTest(true, "Destructor on large PQHeap<int> (no crash)");
+    }
+
+    {
+        lasd::PQHeap<std::string> pqLargeStrDestructor;
+        for (int i = 0; i < 5000; ++i) {
+            pqLargeStrDestructor.Insert(std::to_string(distrib(gen)) + "test");
+        }
+        testResults.addTest(true, "Destructor on large PQHeap<string> (no crash)");
+    }
+
+    // Il distruttore della copia deve funzionare indipendentemente dall'originale.
+    {
+        lasd::PQHeap<int> originalPq;
+        for (int i = 0; i < 50; ++i) {
+            originalPq.Insert(i);
+        }
+        lasd::PQHeap<int> copiedPq = originalPq; // Copia
+        // Originale e Copia devono essere indipendenti.
+        // La distruzione di copiedPq non deve influenzare originalPq e viceversa.
+        testResults.addTest(true, "Copy constructor & subsequent destructor (no crash)");
+    } // copiedPq viene distrutta qui. originalPq rimane in scope.
+
+
+
+    //resoconto dei test
+    testResults.printSummary("\n End of Priority Queue Tests");
+  
+} // 70
 
 
 /* ************************************************************************** */
 
 void MyTestHeap() {
-     std::cout << "\n non ci sono ancora i test per la Heap" << std::endl;
+    std::cout << "\nBegin of Heap Tests:" << std::endl;
+    // Resettiamo il contatore dei test
+    testResults.reset();
+    // Test: Creazione heap vuoto
+    lasd::HeapVec<int> emptyHeap;
+    testResults.addTest(true, "Creating empty heap");
+    
+    // Test: Dimensione heap vuoto
+    testResults.addTest(emptyHeap.Size() == 0, "Empty heap has size 0");
+    
+    // Test: Empty su heap vuoto (usando Size() == 0)
+    testResults.addTest(emptyHeap.Size() == 0, "Empty heap has size 0 (Empty check)");
+    
+    // Test: IsHeap su heap vuoto (dovrebbe essere true)
+    testResults.addTest(emptyHeap.IsHeap(), "Empty heap is a valid heap");
+     // Test: Sort su heap vuoto (verifica che rimanga vuoto)
+    emptyHeap.Sort();
+    testResults.addTest(emptyHeap.Size() == 0, "Sort on empty heap maintains size 0");
+    
+    // Test: Heapify su heap vuoto (verifica che rimanga vuoto)
+    emptyHeap.Heapify();
+    testResults.addTest(emptyHeap.Size() == 0, "Heapify on empty heap maintains size 0");
+    lasd::Vector<int> singleVec(1);
+    singleVec[0] = 42;
+    lasd::HeapVec<int> singleHeap(singleVec);
+    
+    testResults.addTest(singleHeap.Size() == 1, "Single element heap has size 1");
+    testResults.addTest(singleHeap.Size() > 0, "Single element heap is not empty");
+    testResults.addTest(singleHeap.IsHeap(), "Single element heap is valid");
+    testResults.addTest(singleHeap[0] == 42, "Single element heap contains correct value");
+     // Test Sort su heap con un elemento
+    singleHeap.Sort();
+    testResults.addTest(singleHeap.Size() == 1 && singleHeap[0] == 42, "Sort on single element heap preserves element");
+    
+    // ************************************************************************
+    // TEST 3: HEAP CON ELEMENTI DUPLICATI
+    // ************************************************************************
+    
+    lasd::Vector<int> dupVec(6);
+    dupVec[0] = 5; dupVec[1] = 5; dupVec[2] = 3; dupVec[3] = 3; dupVec[4] = 1; dupVec[5] = 1;
+    lasd::HeapVec<int> dupHeap(dupVec);
+    
+    testResults.addTest(dupHeap.IsHeap(), "Heap with duplicates is valid");
+    testResults.addTest(dupHeap.Size() == 6, "Heap with duplicates has correct size");
+    
+    dupHeap.Sort();
+    bool sortedCorrectly = true;
+    for(unsigned int i = 0; i < dupHeap.Size() - 1; i++) {
+        if(dupHeap[i] > dupHeap[i+1]) {
+            sortedCorrectly = false;
+            break;
+        }
+    }
+    testResults.addTest(sortedCorrectly, "Heap with duplicates sorts correctly");
+    
+    // ************************************************************************
+    // TEST 6: COSTRUTTORE DI COPIA
+    // ************************************************************************
+    
+    lasd::Vector<int> originalVec(4);
+    originalVec[0] = 10; originalVec[1] = 8; originalVec[2] = 6; originalVec[3] = 4;
+    lasd::HeapVec<int> originalHeap(originalVec);
+    
+    lasd::HeapVec<int> copiedHeap(originalHeap);
+    testResults.addTest(copiedHeap == originalHeap, "Copy constructor creates equal heap");
+    testResults.addTest(copiedHeap.Size() == originalHeap.Size(), "Copy has same size as original");
+    testResults.addTest(copiedHeap.IsHeap() == originalHeap.IsHeap(), "Copy maintains heap property");
+    
+    // Test indipendenza delle copie
+    originalHeap.Sort();
+    testResults.addTest(!(copiedHeap == originalHeap), "Copy remains independent after original is modified");
+    
+    // ************************************************************************
+    // TEST 7: MOVE CONSTRUCTOR
+    // ************************************************************************
+    
+    lasd::Vector<int> moveVec(3);
+    moveVec[0] = 7; moveVec[1] = 5; moveVec[2] = 3;
+    lasd::HeapVec<int> moveHeap(moveVec);
+    unsigned int originalSize = moveHeap.Size();
+    
+    lasd::HeapVec<int> movedHeap(std::move(moveHeap));
+    testResults.addTest(movedHeap.Size() == originalSize, "Move constructor transfers size correctly");
+    testResults.addTest(moveHeap.Size() == 0, "Original heap has size 0 after move");
+    testResults.addTest(movedHeap.IsHeap(), "Moved heap maintains heap property");
+    
+    // ************************************************************************
+    // TEST 8: OPERATORI DI ASSEGNAZIONE
+    // ************************************************************************
+    
+    lasd::Vector<int> assignVec(3);
+    assignVec[0] = 9; assignVec[1] = 7; assignVec[2] = 5;
+    lasd::HeapVec<int> assignHeap(assignVec);
+    
+    lasd::HeapVec<int> targetHeap;
+    targetHeap = assignHeap;
+    testResults.addTest(targetHeap == assignHeap, "Assignment operator creates equal heap");
+    
+    // Test move assignment
+    lasd::HeapVec<int> moveTargetHeap;
+    unsigned int assignSize = assignHeap.Size();
+    moveTargetHeap = std::move(assignHeap);
+    testResults.addTest(moveTargetHeap.Size() == assignSize, "Move assignment transfers size correctly");
+    testResults.addTest(assignHeap.Size() == 0, "Original heap has size 0 after move assignment");
+    
+    // ************************************************************************
+    // TEST 9: OPERAZIONI SEQUENZIALI
+    // ************************************************************************
+    
+    lasd::Vector<int> seqVec(4);
+    seqVec[0] = 8; seqVec[1] = 6; seqVec[2] = 4; seqVec[3] = 2;
+    lasd::HeapVec<int> seqHeap(seqVec);
+    
+    // Sort -> Heapify -> Sort
+    seqHeap.Sort();
+    bool firstSortOk = !seqHeap.IsHeap();
+    seqHeap.Heapify();
+    bool heapifyOk = seqHeap.IsHeap();
+    seqHeap.Sort();
+    bool secondSortOk = !seqHeap.IsHeap();
+    
+    testResults.addTest(firstSortOk && heapifyOk && secondSortOk, 
+                       "Sequential Sort->Heapify->Sort operations work correctly");
+    
+    // ************************************************************************
+    // TEST 10: ACCESSO AGLI ELEMENTI
+    // ************************************************************************
+    
+    lasd::Vector<int> accessVec(5);
+    accessVec[0] = 10; accessVec[1] = 8; accessVec[2] = 6; accessVec[3] = 4; accessVec[4] = 2;
+    lasd::HeapVec<int> accessHeap(accessVec);
+    
+    testResults.addTest(accessHeap[0] == 10, "Root element access works correctly");
+    testResults.addTest(accessHeap.Front() == 10, "Front() returns root element");
+    testResults.addTest(accessHeap.Back() == 2, "Back() returns last element");
+    // TEST 11: CASI LIMITE CON VALORI ESTREMI
+    // ************************************************************************
+    
+    lasd::Vector<int> extremeVec(4);
+    extremeVec[0] = INT_MAX; extremeVec[1] = INT_MIN; extremeVec[2] = 0; extremeVec[3] = -1;
+    lasd::HeapVec<int> extremeHeap(extremeVec);
+    
+    extremeHeap.Heapify();
+    testResults.addTest(extremeHeap.IsHeap(), "Heap with extreme values is valid after heapify");
+    testResults.addTest(extremeHeap[0] == INT_MAX, "INT_MAX is at root of max-heap");
+    
+    // ************************************************************************
+    // TEST 12: CLEAR E RESIZE
+    // ************************************************************************
+    
+    lasd::Vector<int> clearVec(5);
+    for(unsigned int i = 0; i < 5; i++) clearVec[i] = i + 1;
+    lasd::HeapVec<int> clearHeap(clearVec);
+    
+    clearHeap.Clear();
+    testResults.addTest(clearHeap.Size() == 0, "Clear() sets size to 0");
+    testResults.addTest(clearHeap.Size() == 0, "Heap is empty after Clear() (size check)");
+    testResults.addTest(clearHeap.IsHeap(), "Empty heap after Clear() is valid");
+    
+    // Test Resize
+    clearHeap.Resize(3);
+    testResults.addTest(clearHeap.Size() == 3, "Resize() changes size correctly");
+    // Test con valori double specifici
+    lasd::Vector<double> doubleVec(5);
+    doubleVec[0] = 3.14; doubleVec[1] = 2.71; doubleVec[2] = 1.41; 
+    doubleVec[3] = 0.0; doubleVec[4] = -1.5;
+    
+    lasd::HeapVec<double> doubleHeap(doubleVec);
+    
+    testResults.addTest(doubleHeap.Size() == 5, "Double heap creation with size 5");
+    
+    doubleHeap.Heapify();
+    testResults.addTest(doubleHeap.IsHeap(), "Double heap is valid after heapify");
+    testResults.addTest(doubleHeap[0] == 3.14, "Max double value at root");
+    
+    // Test con valori molto piccoli e grandi
+    lasd::Vector<double> extremeDoubleVec(4);
+    extremeDoubleVec[0] = DBL_MAX; extremeDoubleVec[1] = DBL_MIN; 
+    extremeDoubleVec[2] = 0.0; extremeDoubleVec[3] = -DBL_MAX;
+    
+    lasd::HeapVec<double> extremeDoubleHeap(extremeDoubleVec);
+    extremeDoubleHeap.Heapify();
+    testResults.addTest(extremeDoubleHeap.IsHeap(), "Extreme double values heap is valid");
+    testResults.addTest(extremeDoubleHeap[0] == DBL_MAX, "DBL_MAX at root");
+    
+    // Test precisione floating point
+    lasd::Vector<double> precisionVec(3);
+    precisionVec[0] = 1.0000000001; precisionVec[1] = 1.0000000002; precisionVec[2] = 1.0;
+    lasd::HeapVec<double> precisionHeap(precisionVec);
+    
+    precisionHeap.Heapify();
+    testResults.addTest(precisionHeap[0] == 1.0000000002, "Floating point precision handled correctly");
+    // Test con stringhe speciali
+    lasd::Vector<std::string> specialStringVec(6);
+    specialStringVec[0] = ""; specialStringVec[1] = " "; specialStringVec[2] = "\n";
+    specialStringVec[3] = "\t"; specialStringVec[4] = "normal"; specialStringVec[5] = "CAPS";
+    
+    lasd::HeapVec<std::string> specialStringHeap(specialStringVec);
+    specialStringHeap.Heapify();
+    testResults.addTest(specialStringHeap.IsHeap(), "Special characters string heap is valid");
+    
+    // Test con stringhe di lunghezza variabile
+    lasd::Vector<std::string> lengthVec(4);
+    lengthVec[0] = "a"; lengthVec[1] = "bb"; lengthVec[2] = "ccc"; lengthVec[3] = "dddd";
+    
+    lasd::HeapVec<std::string> lengthHeap(lengthVec);
+    lengthHeap.Heapify();
+    testResults.addTest(lengthHeap.IsHeap(), "Variable length strings heap is valid");
+    
+    // Test sort su stringhe
+    lengthHeap.Sort();
+    bool stringSorted = true;
+    for(unsigned int i = 0; i < lengthHeap.Size() - 1; i++) {
+        if(lengthHeap[i] > lengthHeap[i+1]) {
+            stringSorted = false;
+            break;
+        }
+    }
+    testResults.addTest(stringSorted, "String heap sorts correctly");
 
+    // Test con operazioni di copia profonda
+    
+    lasd::Vector<int> originalVec2(5);
+    for(int i = 0; i < 5; i++) {
+    originalVec2[i] = i + 1;
+    }
+    lasd::HeapVec<int> originalHeap2(originalVec2);
+    lasd::HeapVec<int> copiedHeap2 = originalHeap2; // Copia profonda
+    originalHeap2[0] = 0; // Modifichiamo l'originale usando l'operatore []
+    testResults.addTest(copiedHeap2[0] == 5, "Deep copy maintains independence after original modification");
+    // Test con operazioni di ordinamento
+    lasd::Vector<int> sortVec(5);
+    sortVec[0] = 5; sortVec[1] = 3; sortVec[2] = 8; sortVec[3] = 1; sortVec[4] = 4;
+    lasd::HeapVec<int> sortHeap(sortVec);
+    sortHeap.Heapify();
+    sortHeap.Sort();
+    bool isSorted = true;
+    for(unsigned int i = 0; i < sortHeap.Size() - 1; i++) {
+        if(sortHeap[i] > sortHeap[i+1]) {
+            isSorted = false;
+            break;
+        }
+    }
+    testResults.addTest(isSorted, "Heap sorting works correctly");
+    // Test con operazioni di ordinamento su stringhe
+    lasd::Vector<std::string> stringSortVec(5);
+    stringSortVec[0] = "banana"; stringSortVec[1] = "apple"; stringSortVec[2] = "orange";
+    stringSortVec[3] = "kiwi"; stringSortVec[4] = "grape";
+    lasd::HeapVec<std::string> stringSortHeap(stringSortVec);
+    stringSortHeap.Heapify();
+    stringSortHeap.Sort();
+    bool stringSortOk = true;
+    for(unsigned int i = 0; i < stringSortHeap.Size() - 1; i++) {
 
-}
+        if(stringSortHeap[i] > stringSortHeap[i+1]) {
+            stringSortOk = false;
+            break;
+        }
+    }
+    testResults.addTest(stringSortOk, "String heap sorting works correctly");
+    // Test con operazioni di ordinamento su valori float
+    lasd::Vector<double> floatSortVec(5);
+    floatSortVec[0] = 3.14; floatSortVec[1] = 2.71; floatSortVec[2] = 1.41;
+    floatSortVec[3] = 0.0; floatSortVec[4] = -1.5;
+    lasd::HeapVec<double> floatSortHeap(floatSortVec);
+    floatSortHeap.Heapify();
+    floatSortHeap.Sort();
+    bool floatSortOk = true;
+    for(unsigned int i = 0; i < floatSortHeap.Size() - 1; i++) {
+        if(floatSortHeap[i] > floatSortHeap[i+1]) {
+            floatSortOk = false;
+            break;
+        }
+    }
+    testResults.addTest(floatSortOk, "Float heap sorting works correctly");
+    // Test con operazioni di ordinamento su valori estremi
+    lasd::Vector<int> extremeSortVec(4);
+    extremeSortVec[0] = INT_MAX; extremeSortVec[1] = INT_MIN;
+    extremeSortVec[2] = 0; extremeSortVec[3] = -1;
+    lasd::HeapVec<int> extremeSortHeap(extremeSortVec);
+    extremeSortHeap.Heapify();
+    extremeSortHeap.Sort();
+    bool extremeSortOk = true;
+    for(unsigned int i = 0; i < extremeSortHeap.Size() - 1; i++) {
+        if(extremeSortHeap[i] > extremeSortHeap[i+1]) {
+            extremeSortOk = false;
+            break;
+        }
+    }   
+    testResults.addTest(extremeSortOk, "Extreme value heap sorting works correctly");
 
+    // Test con operazioni di ordinamento su valori booleani
+    lasd::Vector<bool> boolVec(4);
+    boolVec[0] = true; boolVec[1] = false; boolVec[2] = true; boolVec[3] = false;
+    lasd::HeapVec<bool> boolHeap(boolVec);  
+    boolHeap.Heapify();
+    boolHeap.Sort();
+    bool boolSortOk = true;
+    for(unsigned int i = 0; i < boolHeap.Size() - 1; i++) {
+        if(boolHeap[i] > boolHeap[i+1]) {
+            boolSortOk = false;
+            break;
+        }
+    }
+    testResults.addTest(boolSortOk, "Boolean heap sorting works correctly");
+    // Test con operazioni di ordinamento su valori char
+    lasd::Vector<char> charVec(5);
+    charVec[0] = 'e'; charVec[1] = 'a'; charVec[2] = 'd'; charVec[3] = 'c'; charVec[4] = 'b';
+    lasd::HeapVec<char> charHeap(charVec);
+    charHeap.Heapify();
+    charHeap.Sort();
+    bool charSortOk = true;
+    for(unsigned int i = 0; i < charHeap.Size() - 1; i++) {
+        if(charHeap[i] > charHeap[i+1]) {
+            charSortOk = false;
+            break;
+        }
+    }
+    testResults.addTest(charSortOk, "Char heap sorting works correctly");
+    // Test con operazioni di ordinamento su valori stringa
+    lasd::Vector<std::string> stringVec(5);
+    stringVec[0] = "zebra"; stringVec[1] = "apple"; stringVec[2] = "orange";
+    stringVec[3] = "banana"; stringVec[4] = "kiwi";
+    lasd::HeapVec<std::string> stringHeap(stringVec);
+    stringHeap.Heapify();
+    stringHeap.Sort();
+    bool stringHeapSortOk = true;
+    for(unsigned int i = 0; i < stringHeap.Size() - 1; i++) {
+        if(stringHeap[i] > stringHeap[i+1]) {
+            stringHeapSortOk = false;
+            break;
+        }
+    }
+    testResults.addTest(stringHeapSortOk, "String heap sorting works correctly");
+    
+    // Test 1: Merge two heaps
+    lasd::Vector<int> vec1(3);
+    vec1[0] = 10; vec1[1] = 8; vec1[2] = 6;
+    lasd::HeapVec<int> heap1(vec1);
 
+    lasd::Vector<int> vec2(3);
+    vec2[0] = 9; vec2[1] = 7; vec2[2] = 5;
+    lasd::HeapVec<int> heap2(vec2);
+
+    // Create a new heap combining elements
+    lasd::Vector<int> mergedVec(6);
+    for(unsigned int i = 0; i < 3; i++) {
+        mergedVec[i] = vec1[i];
+        mergedVec[i+3] = vec2[i];
+    }
+    lasd::HeapVec<int> mergedHeap(mergedVec);
+    mergedHeap.Heapify();
+
+    testResults.addTest(mergedHeap.Size() == 6 && mergedHeap[0] == 10, 
+                       "Merged heap maintains heap property");
+    
+    // Test 3: Heap balancing properties
+    lasd::Vector<int> balanceVec(7);
+    for(int i = 0; i < 7; i++) balanceVec[i] = i;
+    lasd::HeapVec<int> balanceHeap(balanceVec);
+    balanceHeap.Heapify();
+
+    bool isBalanced = true;
+    for(unsigned int i = 0; i < balanceHeap.Size()/2; i++) {
+        unsigned int leftChild = 2*i + 1;
+        unsigned int rightChild = 2*i + 2;
+        if(leftChild < balanceHeap.Size() && balanceHeap[i] < balanceHeap[leftChild])
+            isBalanced = false;
+        if(rightChild < balanceHeap.Size() && balanceHeap[i] < balanceHeap[rightChild])
+            isBalanced = false;
+    }
+    testResults.addTest(isBalanced, "Heap maintains balance property");
+
+    // Test 4: Exception handling
+    bool exceptionCaught = false;
+    try {
+        lasd::HeapVec<int> invalidHeap;
+        invalidHeap[5] = 10; // Should throw
+    } catch(...) {
+        exceptionCaught = true;
+    }
+    testResults.addTest(exceptionCaught, "Heap handles invalid access properly");
+
+    // Test 5: Random data
+    lasd::Vector<int> randVec(100);
+    for(int i = 0; i < 100; i++) randVec[i] = rand() % 1000;
+    lasd::HeapVec<int> randHeap(randVec);
+    randHeap.Heapify();
+
+    bool isHeapProperty = true;
+    for(unsigned int i = 0; i < randHeap.Size()/2; i++) {
+        unsigned int leftChild = 2*i + 1;
+        unsigned int rightChild = 2*i + 2;
+        if(leftChild < randHeap.Size() && randHeap[i] < randHeap[leftChild])
+            isHeapProperty = false;
+        if(rightChild < randHeap.Size() && randHeap[i] < randHeap[rightChild])
+            isHeapProperty = false;
+    }
+    testResults.addTest(isHeapProperty, "Heap maintains properties with random data");
+    // Test di attraversamento specifici
+    lasd::Vector<int> traverseVec(5);
+    traverseVec[0] = 10; traverseVec[1] = 8; traverseVec[2] = 6; 
+    traverseVec[3] = 4; traverseVec[4] = 2;
+    lasd::HeapVec<int> traverseHeap(traverseVec);
+
+    // Test PreOrder
+    testResults.addTest(traverseHeap[0] == 10, "PreOrder root check");
+    testResults.addTest(traverseHeap[1] == 8, "PreOrder first level check");
+
+    // Test concatenazione di operazioni
+    lasd::HeapVec<int> chainHeap(traverseHeap);
+    chainHeap.Heapify();
+    chainHeap.Sort();
+    chainHeap.Heapify();
+    testResults.addTest(chainHeap.IsHeap(), "Chain of operations maintains heap property");
+
+    // Test con lambda functions
+    lasd::Vector<int> lambdaVec(3);
+    lambdaVec[0] = 3; lambdaVec[1] = 2; lambdaVec[2] = 1;
+    lasd::HeapVec<int> lambdaHeap(lambdaVec);
+    int sum = 0;
+    // Test accumulation con lambda
+    for(unsigned int i = 0; i < lambdaHeap.Size(); i++) {
+    sum += lambdaHeap[i];
+   }
+    testResults.addTest(sum == 6, "Accumulation with lambda works correctly");
+
+    // Test con modifiche strutturali
+    lasd::Vector<int> structVec(4);
+    structVec[0] = 100; structVec[1] = 50; structVec[2] = 25; structVec[3] = 12;
+    lasd::HeapVec<int> structHeap(structVec);
+    structHeap.Clear();
+    structHeap.Resize(2);
+    testResults.addTest(structHeap.Size() == 2, "Structural modifications work correctly");
+
+    // Test con valori negativi e zero alternati
+    lasd::Vector<int> alternatingVec(6);
+    alternatingVec[0] = 0; alternatingVec[1] = -1; 
+    alternatingVec[2] = 0; alternatingVec[3] = -2;
+    alternatingVec[4] = 0; alternatingVec[5] = -3;
+    lasd::HeapVec<int> alternatingHeap(alternatingVec);
+    alternatingHeap.Heapify();
+    testResults.addTest(alternatingHeap[0] == 0, "Alternating zero/negative values heap property");
+
+    // Test boundary conditions con resize
+    lasd::HeapVec<int> resizeHeap;
+    resizeHeap.Resize(1);
+    resizeHeap.Resize(100);
+    resizeHeap.Resize(50);
+    testResults.addTest(resizeHeap.Size() == 50, "Multiple resize operations work correctly");
+
+    // Test con operazioni di copia dopo modifiche
+    lasd::Vector<int> modVec(3);
+    modVec[0] = 30; modVec[1] = 20; modVec[2] = 10;
+    lasd::HeapVec<int> modHeap(modVec);
+    modHeap.Sort();
+    lasd::HeapVec<int> copiedModHeap(modHeap);
+    testResults.addTest(!copiedModHeap.IsHeap(), "Copy constructor preserves non-heap state");
+    // Test con heap di dimensione pari/dispari
+    lasd::Vector<int> oddVec(7);
+    for(int i = 0; i < 7; i++) oddVec[i] = 7-i;
+    lasd::HeapVec<int> oddHeap(oddVec);
+    testResults.addTest(oddHeap.IsHeap(), "Odd-sized heap property check");
+
+    lasd::Vector<int> evenVec(8);
+    for(int i = 0; i < 8; i++) evenVec[i] = 8-i;
+    lasd::HeapVec<int> evenHeap(evenVec);
+    testResults.addTest(evenHeap.IsHeap(), "Even-sized heap property check");
+
+    // Test con sequenze specifiche
+    lasd::Vector<int> seqVec1(5);
+    seqVec1[0] = 1; seqVec1[1] = 2; seqVec1[2] = 3; seqVec1[3] = 4; seqVec1[4] = 5; // già ordinato
+    lasd::HeapVec<int> seqHeap1(seqVec1);
+    testResults.addTest(seqHeap1.IsHeap(), "Already sorted sequence heap check");
+ 
+    lasd::Vector<int> seqVec2(5);
+    seqVec2[0] = 5; seqVec2[1] = 4; seqVec2[2] = 3; seqVec2[3] = 2; seqVec2[4] = 1; // ordine inverso
+    lasd::HeapVec<int> seqHeap2(seqVec2);
+    testResults.addTest(seqHeap2.IsHeap(), "Reverse sorted sequence heap check");
+
+    // Test con valori decimali specifici
+    lasd::Vector<double> preciseVec(4);
+    preciseVec[0] = 1.1111; preciseVec[1] = 1.1112; 
+    preciseVec[2] = 1.1113; preciseVec[3] = 1.1114;
+    lasd::HeapVec<double> preciseHeap(preciseVec);
+    preciseHeap.Heapify();
+    testResults.addTest(std::abs(preciseHeap[0] - 1.1114) < 0.0001, "Precise decimal handling");
+
+    // Test con caratteri speciali
+    lasd::Vector<char> specialCharVec(6);
+    specialCharVec[0] = '!'; specialCharVec[1] = '@'; 
+    specialCharVec[2] = '#'; specialCharVec[3] = '$';
+    specialCharVec[4] = '%'; specialCharVec[5] = '^';
+    lasd::HeapVec<char> specialCharHeap(specialCharVec);
+    testResults.addTest(specialCharHeap.IsHeap(), "Special characters heap property");
+
+    // Test di stabilità dopo multiple operazioni
+    lasd::HeapVec<int> stabilityHeap;
+    for(int i = 0; i < 10; i++) {
+    lasd::Vector<int> tempVec(3);
+    tempVec[0] = i; tempVec[1] = i*2; tempVec[2] = i*3;
+    lasd::HeapVec<int> tempHeap(tempVec);
+    stabilityHeap = tempHeap;
+    stabilityHeap.Heapify();
+    }
+    testResults.addTest(stabilityHeap.IsHeap(), "Heap stability after multiple operations");
+
+    // Test con stringhe Unicode
+    lasd::Vector<std::string> unicodeVec(4);
+    unicodeVec[0] = "α"; unicodeVec[1] = "β"; 
+    unicodeVec[2] = "γ"; unicodeVec[3] = "δ";
+    lasd::HeapVec<std::string> unicodeHeap(unicodeVec);
+    testResults.addTest(unicodeHeap.IsHeap(), "Unicode string heap property");
+
+    // Test di performance su grandi heap
+    lasd::Vector<int> largeVec(1000);
+    for(int i = 0; i < 1000; i++) largeVec[i] = rand();
+    lasd::HeapVec<int> largeHeap(largeVec);
+    largeHeap.Heapify();
+    testResults.addTest(largeHeap.IsHeap(), "Large heap maintains heap property");
+    // Test con heap di tipi misti usando pair
+    lasd::Vector<std::pair<int, std::string>> pairVec(4);
+    pairVec[0] = {5, "five"}; 
+    pairVec[1] = {3, "three"};
+    pairVec[2] = {7, "seven"}; 
+    pairVec[3] = {1, "one"};
+    lasd::HeapVec<std::pair<int, std::string>> pairHeap(pairVec);
+    pairHeap.Heapify();
+    testResults.addTest(pairHeap[0].first == 7, "Pair heap maintains max-heap property on first element");
+    testResults.addTest(pairHeap[0].second == "seven", "Pair heap maintains correspondence of pairs");
+    
+    // Test per verificare la stabilità dell'ordinamento con elementi uguali
+    lasd::Vector<std::pair<int, int>> stabVec(6);
+    stabVec[0] = {5, 1}; stabVec[1] = {5, 2}; 
+    stabVec[2] = {5, 3}; stabVec[3] = {3, 1};
+    stabVec[4] = {3, 2}; stabVec[5] = {3, 3};
+    lasd::HeapVec<std::pair<int, int>> stabHeap(stabVec);
+    stabHeap.Sort();
+    bool stabilityMaintained = true;
+    for(unsigned int i = 1; i < stabHeap.Size(); i++) {
+        if(stabHeap[i-1].first == stabHeap[i].first && 
+           stabHeap[i-1].second > stabHeap[i].second) {
+            stabilityMaintained = false;
+            break;
+        }
+    }
+    testResults.addTest(stabilityMaintained, "Sort maintains stability for equal elements");
+    
+    // Test per verifica proprietà ricorsiva dell'heap
+    lasd::Vector<int> recVec(7);
+    for(int i = 0; i < 7; i++) recVec[i] = i;
+    lasd::HeapVec<int> recHeap(recVec);
+    recHeap.Heapify();
+    bool recursiveProperty = true;
+    std::function<bool(unsigned int)> checkSubtree = [&recHeap, &checkSubtree](unsigned int idx) {
+        unsigned int leftChild = 2*idx + 1;
+        unsigned int rightChild = 2*idx + 2;
+        bool valid = true;
+        if(leftChild < recHeap.Size()) {
+            valid = valid && recHeap[idx] >= recHeap[leftChild] && checkSubtree(leftChild);
+        }
+        if(rightChild < recHeap.Size()) {
+            valid = valid && recHeap[idx] >= recHeap[rightChild] && checkSubtree(rightChild);
+        }
+        return valid;
+    };
+    recursiveProperty = checkSubtree(0);
+    testResults.addTest(recursiveProperty, "Heap maintains recursive property in all subtrees");
+    
+    // Test di stress con operazioni alternate
+    lasd::HeapVec<int> stressHeap;
+    std::vector<int> expectedValues;
+    for(int i = 0; i < 100; i++) {
+        lasd::Vector<int> tempVec(3);
+        tempVec[0] = rand() % 1000;
+        tempVec[1] = rand() % 1000;
+        tempVec[2] = rand() % 1000;
+        lasd::HeapVec<int> temp(tempVec);
+        if(i % 2 == 0) {
+            temp.Sort();
+        }
+        stressHeap = temp;
+        stressHeap.Heapify();
+        testResults.addTest(stressHeap.IsHeap(), 
+                           "Heap maintains properties after stress operation " + std::to_string(i));
+    }
+    
+    // Test con sequenze particolari di numeri
+    lasd::Vector<int> seqVec3(8);
+    // Sequenza Fibonacci
+    seqVec3[0] = 1; seqVec3[1] = 1; seqVec3[2] = 2; 
+    seqVec3[3] = 3; seqVec3[4] = 5; seqVec3[5] = 8;
+    seqVec3[6] = 13; seqVec3[7] = 21;
+    lasd::HeapVec<int> fibHeap(seqVec3);
+    fibHeap.Sort();
+    bool isFibSorted = true;
+    for(unsigned int i = 1; i < fibHeap.Size(); i++) {
+        if(fibHeap[i-1] > fibHeap[i]) {
+            isFibSorted = false;
+            break;
+        }
+    }
+    testResults.addTest(isFibSorted, "Heap correctly sorts Fibonacci sequence");
+    
+    // Test con operazioni di resize complesse
+    lasd::HeapVec<int> complexHeap;
+    std::vector<unsigned int> sizes = {1, 10, 5, 20, 15, 7, 30, 25};
+    bool resizeOk = true;
+    for(unsigned int size : sizes) {
+        complexHeap.Resize(size);
+        if(complexHeap.Size() != size) {
+            resizeOk = false;
+            break;
+        }
+        // Riempi con valori
+        for(unsigned int i = 0; i < size; i++) {
+            complexHeap[i] = rand() % 100;
+        }
+        complexHeap.Heapify();
+        if(!complexHeap.IsHeap()) {
+            resizeOk = false;
+            break;
+        }
+    }
+    testResults.addTest(resizeOk, "Complex resize operations maintain heap property");
+
+    // ************************************************************************
+    // TEST DI SICUREZZA MEMORIA E ROBUSTEZZA
+    // ************************************************************************
+    
+    // Test per memory leaks con operazioni cicliche
+    lasd::HeapVec<int> cyclicHeap;
+    for(int i = 0; i < 1000; i++) {
+        cyclicHeap.Resize(i % 10 + 1);
+        cyclicHeap.Heapify();
+        cyclicHeap.Sort();
+    }
+    testResults.addTest(true, "Cyclic memory operations completed");
+
+    // Test accessi boundary
+    lasd::Vector<int> boundaryVec(5);
+    for(int i = 0; i < 5; i++) boundaryVec[i] = i;
+    lasd::HeapVec<int> boundaryHeap(boundaryVec);
+    
+    bool boundaryAccessOk = true;
+    try {
+        boundaryHeap[boundaryHeap.Size() - 1];
+        boundaryHeap[0];
+    } catch(...) {
+        boundaryAccessOk = false;
+    }
+    testResults.addTest(boundaryAccessOk, "Boundary access check");
+
+    // resoconto dei test
+    testResults.printSummary("\n End of Heap Tests");
+    
+    } //180 test
 
 
 /* ************************************************************************** */
@@ -1288,76 +2137,32 @@ void MyTestHeap() {
 void mytest() {
     int scelta;
     
-    std::cout << "~*~#~*~ Benvenuti nei Test Personalizzati ~*~#~*~!" << std::endl;
+    std::cout << "~*~#~*~  LASD Libraries 2025 - Menu dei Custom Tests ~*~#~*~!" << std::endl;
     
     do {
         std::cout << "\nScegli il test da eseguire:" << std::endl;
-        std::cout << "\n=== ESERCIZIO 1: Vector/List/Set ===" << std::endl;
-        std::cout << "1. Test Vector" << std::endl;
-        std::cout << "2. Test List" << std::endl;
-        std::cout << "3. Test Set" << std::endl;
-        std::cout << "4. Esegui tutti i test dell'Esercizio 1" << std::endl;
-        std::cout << "\n=== ESERCIZIO 2:  ===" << std::endl;
-        std::cout << "5. Test da aggiungere  (Vector Implementation)" << std::endl;
-        std::cout << "6. Test Priority Queue" << std::endl;
-        std::cout << "7. Esegui tutti i test dell'Esercizio 2" << std::endl;
+        std::cout << "1. Test Heap" << std::endl;
+        std::cout << "2. Test Priority Queue" << std::endl;
+        std::cout << "3. Esegui tutti i test dell'Esercizio 2" << std::endl;
         std::cout << "\n=== OPZIONI GENERALI ===" << std::endl;
-        std::cout << "8. Esegui tutti i test (Esercizio 1 & 2)" << std::endl;
         std::cout << "0. Torna al menu principale" << std::endl;
         std::cout << "\nScelta: ";
         std::cin >> scelta;
         
         switch(scelta) {
-            // Test Esercizio 1
+        
             case 1:
-                std::cout << "\n=== TEST VECTOR (ESERCIZIO 1) ===" << std::endl;
-                MyTestVector();
+                std::cout << "\n=== Test per Heap ===" << std::endl;
+                MyTestHeap();
                 break;
             case 2:
-                std::cout << "\n=== TEST LIST (ESERCIZIO 1) ===" << std::endl;
-                MyTestList();
+                std::cout << "\n=== Test per Priority Queue ===" << std::endl;
+                MyTestPQ();
                 break;
             case 3:
-                std::cout << "\n=== TEST SET (ESERCIZIO 1) ===" << std::endl;
-                MyTestSetVec();
-                MyTestSetList();
-                break;
-            case 4:
-                std::cout << "\n=== TEST COMPLETI ESERCIZIO 1 ===" << std::endl;
-                MyTestVector();
-                MyTestList();
-                MyTestSetVec();
-                MyTestSetList();
-                break;
-                
-            // Test Esercizio 2
-            case 5:
-                std::cout << "\n=== TEST DI HEAP (ESERCIZIO 2) ===" << std::endl;
-                //funzione non ancora implementata
-                std::cout << "Test per Heap" << std::endl;
-                break;
-            case 6:
-                std::cout << "\n=== TEST DI PRIORITY QUEUE (ESERCIZIO 2) ===" << std::endl;
+                std::cout << "\n=== Esegui tutti i test custom ===" << std::endl;
+                MyTestHeap();
                 MyTestPQ();
-                std::cout << "Test per Priority Queue" << std::endl;
-                break;
-            case 7:
-                std::cout << "\n=== TEST COMPLETI ESERCIZIO 2 ===" << std::endl;
-                // MyTestHeapIntegration();
-                //  MyTestPQIntegration();
-                std::cout << "Test non ancora implementati" << std::endl;
-                break;
-                
-            // Test Completi
-            case 8:
-                std::cout << "\n=== ESECUZIONE DI TUTTI I TEST ===" << std::endl;
-                std::cout << "\n--- TEST ESERCIZIO 1 ---" << std::endl;
-                MyTestVector();
-                MyTestList();
-                MyTestSetVec();
-                MyTestSetList();
-                std::cout << "\n--- TEST ESERCIZIO 2 ---" << std::endl;
-                std::cout << "Test non ancora implementati" << std::endl;
                 break;
                 
             case 0:

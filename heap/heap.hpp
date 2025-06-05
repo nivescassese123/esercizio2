@@ -15,8 +15,7 @@ namespace lasd {
 template <typename Data>
 class Heap : virtual public SortableLinearContainer<Data>, 
              virtual public ClearableContainer {
-  // Must extend SortableLinearContainer<Data>,
-  //             ClearableContainer
+ 
 
 private:
 
@@ -30,10 +29,10 @@ public:
   /* ************************************************************************ */
 
   // Copy assignment
-  Heap& operator=(const Heap&) = delete; // Copy assignment of abstract types is not possible.
+  Heap& operator=(const Heap&) = delete; 
 
   // Move assignment
-  Heap& operator=(Heap&&) = delete; // Move assignment of abstract types is not possible.
+  Heap& operator=(Heap&&) = delete; 
 
   /* ************************************************************************ */
 

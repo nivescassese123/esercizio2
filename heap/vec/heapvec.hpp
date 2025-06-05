@@ -16,33 +16,29 @@ namespace lasd {
 template <typename Data>
 class HeapVec :   public Heap<Data>,
                  public SortableVector<Data> {
-  // Must extend Heap<Data>,
-  // Could extend SortableVector<Data>
-
+ 
 private:
 
-  // se non estendo sortable, avrei dovuto riscrivere tante righe di codice e metterlo private
-
+  
 protected:
 
-   
    using Vector<Data>::elements;
-   
+
    using Vector<Data>::size;
    using Container::Empty;
 
-  // ...
+ 
 
 public:
+
 
   // Default constructor
    HeapVec() = default;
 
-  /* ************************************************************************ */
-
-  // Specific constructors
-   explicit HeapVec(const TraversableContainer<Data> &); // A heap obtained from a TraversableContainer
-   explicit HeapVec(const MappableContainer<Data> &&); // A heap obtained from a MappableContainer
+  
+   // Constructors 
+   explicit HeapVec(const TraversableContainer<Data> &); 
+   explicit HeapVec(const MappableContainer<Data> &&); 
 
   /* ************************************************************************ */
 
@@ -60,7 +56,7 @@ public:
   /* ************************************************************************ */
 
   // Copy assignment
-  HeapVec& operator=(const HeapVec&); //li devo implementare quindi niente = delete
+  HeapVec& operator=(const HeapVec&); 
 
   // Move assignment
   HeapVec& operator=(HeapVec&&) noexcept;
@@ -75,15 +71,15 @@ public:
 
   // Specific member functions (inherited from Heap)
 
-   bool IsHeap() const  noexcept override; // Override Heap member
+   bool IsHeap() const  noexcept override; 
 
-   void Heapify() override; // Override Heap member
+   void Heapify() override; 
 
   /* ************************************************************************ */
 
   // Specific member function (inherited from SortableLinearContainer)
 
-  void Sort() noexcept override; // Override SortableLinearContainer member
+  void Sort() noexcept override; 
 
 protected:
 
